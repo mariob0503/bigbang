@@ -4,10 +4,15 @@
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
 let galaxySystem = null; // Will hold the galaxy cluster (added later)
-let nebula = null; // Will hold the nebula background (added later)
+let nebula = null; // Will hold the nebula background (cosmic fog)
 let particleCount = 20000; // Number of particles for the Big Bang explosion
 let params; // Object to store parameters controlled by the UI
 let clock = new THREE.Clock(); // Clock to keep track of elapsed time
+
+// For nebula fade-in:
+let nebulaFadeStartTime = 0;
+const nebulaFadeDuration = 3; // seconds
+const nebulaTargetOpacity = 0.7;
 
 // Initialize the scene and start the animation loop.
 init();
@@ -20,8 +25,7 @@ animate();
 function init() {
   // Create a new scene.
   scene = new THREE.Scene();
-
-  // (Optional) Add fog to the scene if desired:
+  // (Optional) Add fog if desired; you can uncomment and adjust the density:
   // scene.fog = new THREE.FogExp2(0x000000, 0.00025);
 
   // Create a perspective camera.
@@ -78,13 +82,12 @@ function init() {
   // Set up UI controls with dat.GUI.
   setupGUI();
 
-  // Automatically enable auto-rotation after 5 seconds with a smooth ramp-up.
+  // Automatically enable auto-rotation after 3 seconds with a smooth ramp-up.
   setTimeout(() => {
     controls.autoRotate = true;
     const rampDuration = 3; // Ramp duration in seconds
     const targetSpeed = 1.0; // Final autoRotateSpeed value
     const startTime = clock.elapsedTime;
-
     function rampAutoRotate() {
       let elapsed = clock.elapsedTime - startTime;
       let t = elapsed / rampDuration;
@@ -96,7 +99,7 @@ function init() {
       }
     }
     rampAutoRotate();
-  }, 5000);
+  }, 3000);
 
   // Listen for window resize events.
   window.addEventListener("resize", onWindowResize, false);
@@ -175,6 +178,8 @@ function generateSprite() {
 
   // Create and return a texture from the canvas.
   const texture = new THREE.CanvasTexture(canvas);
+  // Use linear filtering to smooth out the texture.
+  texture.minFilter = THREE.LinearFilter;
   return texture;
 }
 
@@ -247,13 +252,19 @@ function animate() {
   updateParticles(delta);
 
   // Gradually add additional elements to the universe:
-  // After 10 seconds, add a galaxy cluster; after 15 seconds, add a nebula.
+  // After 10 seconds, add a galaxy cluster.
   let elapsed = clock.elapsedTime;
   if (elapsed > 10 && !galaxySystem) {
     createGalaxyCluster();
   }
-  if (elapsed > 15 && !nebula) {
+  // After 8 seconds, create the nebula (cosmic fog) if not already created.
+  if (elapsed > 8 && !nebula) {
     createNebula();
+  }
+  // If the nebula exists and its opacity is below the target, fade it in smoothly.
+  if (nebula && nebula.material.opacity < nebulaTargetOpacity) {
+    let fadeElapsed = clock.elapsedTime - nebulaFadeStartTime;
+    nebula.material.opacity = Math.min(nebulaTargetOpacity, (fadeElapsed / nebulaFadeDuration) * nebulaTargetOpacity);
   }
 
   // Update camera controls (handles auto-rotation if enabled).
@@ -315,18 +326,22 @@ function createGalaxyCluster() {
 // --------------------------------------------------------------------------------
 // Function: createNebula()
 // Creates a large, semi-transparent sphere with a custom-generated texture to
-// simulate a nebula that forms as the universe expands.
+// simulate a nebula (cosmic fog) that forms as the universe expands.
 // --------------------------------------------------------------------------------
 function createNebula() {
   const nebulaGeometry = new THREE.SphereGeometry(500, 32, 32);
+  // Create the nebula texture and smooth it.
+  const texture = generateNebulaTexture();
   const nebulaMaterial = new THREE.MeshBasicMaterial({
-    map: generateNebulaTexture(),
+    map: texture,
     side: THREE.BackSide,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.0, // Start fully transparent and fade in.
   });
   nebula = new THREE.Mesh(nebulaGeometry, nebulaMaterial);
   scene.add(nebula);
+  // Record the time at which the nebula starts fading in.
+  nebulaFadeStartTime = clock.elapsedTime;
 }
 
 // --------------------------------------------------------------------------------
@@ -362,5 +377,8 @@ function generateNebulaTexture() {
     const y = Math.random() * size;
     context.fillRect(x, y, 1, 1);
   }
-  return new THREE.CanvasTexture(canvas);
+  const texture = new THREE.CanvasTexture(canvas);
+  // Use linear filtering to smooth the texture.
+  texture.minFilter = THREE.LinearFilter;
+  return texture;
 }
