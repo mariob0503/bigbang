@@ -31,8 +31,8 @@ animate();
 function init() {
   // Create the main scene.
   scene = new THREE.Scene();
-  // (Optional) Add fog if desired; you can uncomment and adjust the density:
-  // scene.fog = new THREE.FogExp2(0x000000, 0.00025);
+  // Explicitly set a background color (black) so that the scene is not transparent.
+  scene.background = new THREE.Color(0x000000);
 
   // Create the main perspective camera.
   camera = new THREE.PerspectiveCamera(
@@ -48,6 +48,8 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
+  // Disable autoClear so that when we later render the HUD overlay, it doesn't wipe out the composer output.
+  renderer.autoClear = false;
   document.body.appendChild(renderer.domElement);
 
   // Add OrbitControls.
@@ -74,12 +76,13 @@ function init() {
     0.4, // radius
     0.85 // threshold
   );
+  // Adjust parameters as desired.
   bloomPass.threshold = 0;
   bloomPass.strength = 2;
   bloomPass.radius = 0.5;
   composer.addPass(bloomPass);
 
-  // Ensure the final bloom pass renders to the screen.
+  // Ensure the final pass renders to the screen.
   bloomPass.renderToScreen = true;
 
   // Create the Big Bang particle system.
@@ -287,6 +290,11 @@ function animate() {
   }
 
   controls.update();
+
+  // Clear the renderer manually since autoClear is false.
+  renderer.clear();
+
+  // Render the main scene using the composer.
   composer.render(delta);
 
   // Render the HUD overlay (bar.png) on top of the main scene.
