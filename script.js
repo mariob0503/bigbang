@@ -1,18 +1,24 @@
 // --------------------------------------------------------------------------------
-// Global variables for scene, camera, renderer, controls, and simulation objects. Version 080220251549 working!
+// Global variables for scene, camera, renderer, controls, and simulation objects. Version 080220251608 bar appear!
 // --------------------------------------------------------------------------------
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
 let galaxySystem = null; // Will hold the galaxy cluster (added later)
-let nebula = null; // Will hold the nebula background (cosmic fog)
+let nebula = null;       // Will hold the nebula background (cosmic fog)
 let particleCount = 20000; // Number of particles for the Big Bang explosion
-let params; // Object to store parameters controlled by the UI
+let params;              // Object to store parameters controlled by the UI
 let clock = new THREE.Clock(); // Clock to keep track of elapsed time
 
 // For nebula fade-in:
 let nebulaFadeStartTime = 0;
 const nebulaFadeDuration = 3; // seconds
 const nebulaTargetOpacity = 0.7;
+
+// Global variables for HUD overlay:
+let hudScene, hudCamera, barSprite;
+
+// Global variable for dat.GUI:
+let gui;
 
 // Initialize the scene and start the animation loop.
 init();
@@ -79,8 +85,21 @@ function init() {
   // Create the primary particle system representing the initial Big Bang explosion.
   createParticleSystem();
 
-  // Set up UI controls with dat.GUI.
+  // Set up UI controls with dat.GUI and store the reference globally.
   setupGUI();
+
+  // Create a HUD scene and an orthographic camera for overlaying the PNG.
+  hudScene = new THREE.Scene();
+  {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    hudCamera = new THREE.OrthographicCamera(
+      -width / 2, width / 2, 
+       height / 2, -height / 2, 
+      0.1, 10
+    );
+    hudCamera.position.z = 1;
+  }
 
   // Automatically enable auto-rotation after 3 seconds with a smooth ramp-up.
   setTimeout(() => {
@@ -99,6 +118,26 @@ function init() {
       }
     }
     rampAutoRotate();
+
+    // Hide the dat.GUI controls.
+    if (gui && gui.domElement) {
+      gui.domElement.style.display = 'none';
+    }
+    // Disable OrbitControls to prevent further user interaction.
+    controls.enabled = false;
+
+    // Load the custom PNG (bar.png) and add it as a centered HUD sprite.
+    const loader = new THREE.TextureLoader();
+    loader.load('textures/bar.png', function(texture) {
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      barSprite = new THREE.Sprite(material);
+      // Set the sprite's scale to 25% of the window height.
+      const spriteScale = window.innerHeight * 0.25;
+      barSprite.scale.set(spriteScale, spriteScale, 1);
+      // Position at the center of the HUD (0,0 in our orthographic camera space).
+      barSprite.position.set(0, 0, 0);
+      hudScene.add(barSprite);
+    });
   }, 3000);
 
   // Listen for window resize events.
@@ -197,8 +236,8 @@ function setupGUI() {
     bloomThreshold: 0,  // Bloom effect threshold.
   };
 
-  // Create a GUI panel.
-  const gui = new dat.GUI({ width: 300 });
+  // Create a GUI panel and store the reference globally.
+  gui = new dat.GUI({ width: 300 });
   gui.add(params, "expansionSpeed", 10, 200).name("Expansion Speed");
   gui
     .add(params, "particleSize", 1, 10)
@@ -231,10 +270,20 @@ function setupGUI() {
 // Adjusts the camera aspect ratio and renderer size when the browser window resizes.
 // --------------------------------------------------------------------------------
 function onWindowResize() {
+  // Update main camera and renderer.
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
+
+  // Update HUD orthographic camera.
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  hudCamera.left = -width / 2;
+  hudCamera.right = width / 2;
+  hudCamera.top = height / 2;
+  hudCamera.bottom = -height / 2;
+  hudCamera.updateProjectionMatrix();
 }
 
 // --------------------------------------------------------------------------------
@@ -270,8 +319,12 @@ function animate() {
   // Update camera controls (handles auto-rotation if enabled).
   controls.update();
 
-  // Render the scene using the post-processing composer (which includes bloom).
+  // Render the main scene using the post-processing composer.
   composer.render(delta);
+
+  // Render the HUD overlay (bar.png) on top of the main scene.
+  renderer.clearDepth();
+  renderer.render(hudScene, hudCamera);
 }
 
 // --------------------------------------------------------------------------------
