@@ -21,7 +21,7 @@ function init() {
   // Create a new scene.
   scene = new THREE.Scene();
 
-  // (Optional) You can add fog to the scene here if desired:
+  // (Optional) Add fog to the scene if desired:
   // scene.fog = new THREE.FogExp2(0x000000, 0.00025);
 
   // Create a perspective camera.
@@ -44,7 +44,7 @@ function init() {
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; // Smooth out camera movement.
   controls.dampingFactor = 0.05;
-  // Initially, do not auto-rotate. We'll enable this after 5 seconds.
+  // Initially, disable auto-rotation.
   controls.autoRotate = false;
 
   // Add ambient light to gently light the scene.
@@ -78,10 +78,24 @@ function init() {
   // Set up UI controls with dat.GUI.
   setupGUI();
 
-  // Automatically enable auto-rotation after 5 seconds if the user does not interact.
+  // Automatically enable auto-rotation after 5 seconds with a smooth ramp-up.
   setTimeout(() => {
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.0; // Adjust this value as needed (1.0 rotates slowly to the right)
+    const rampDuration = 3; // Ramp duration in seconds
+    const targetSpeed = 1.0; // Final autoRotateSpeed value
+    const startTime = clock.elapsedTime;
+
+    function rampAutoRotate() {
+      let elapsed = clock.elapsedTime - startTime;
+      let t = elapsed / rampDuration;
+      if (t > 1) t = 1;
+      // Gradually increase the autoRotateSpeed from 0 to targetSpeed.
+      controls.autoRotateSpeed = targetSpeed * t;
+      if (t < 1) {
+        requestAnimationFrame(rampAutoRotate);
+      }
+    }
+    rampAutoRotate();
   }, 5000);
 
   // Listen for window resize events.
@@ -103,7 +117,7 @@ function createParticleSystem() {
 
   // Initialize each particle at (0,0,0) with a random outward velocity.
   for (let i = 0; i < particleCount; i++) {
-    // All particles start at the singularity (with a tiny offset if desired).
+    // All particles start at the singularity.
     particlePositions[i * 3] = 0;
     particlePositions[i * 3 + 1] = 0;
     particlePositions[i * 3 + 2] = 0;
@@ -242,7 +256,7 @@ function animate() {
     createNebula();
   }
 
-  // Update camera controls (this will also handle auto-rotation if enabled).
+  // Update camera controls (handles auto-rotation if enabled).
   controls.update();
 
   // Render the scene using the post-processing composer (which includes bloom).
