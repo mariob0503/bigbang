@@ -1,42 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Big Bang Simulation</title>
-  <!-- Link to your local CSS file -->
-  <link rel="stylesheet" type="text/css" href="style.css">
-  
-  <!--
-    The following scripts are loaded via CDN:
-      • three.js for 3D rendering.
-      • dat.GUI for UI controls.
-      • OrbitControls to allow camera orbiting.
-      • EffectComposer, RenderPass, and UnrealBloomPass to add a bloom effect (simulating volumetric light).
-  -->
-  
-  <!-- Core Three.js library first -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  
-  <!-- Shaders must be loaded before any passes or effects that use them -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-  
-  <!-- Post-processing components in dependency order -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  
-  <!-- Controls -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  
-  <!-- GUI library can be loaded at any point -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
-</head>
-<body>
-  <!-- Your content can go here if needed -->
-
-  <!-- Reference to your local JavaScript file -->
-  <script src="script.js"></script>
-</body>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- This meta tag ensures proper scaling on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js Scene with Bar Overlay (No Fade Out)</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+    <!-- Include Three.js and required libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  </head>
+  <body>
+    <!-- The main code is in script.js -->
+    <script src="script.js"></script>
+  </body>
 </html>
