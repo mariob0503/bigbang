@@ -193,12 +193,13 @@ function generateSprite() {
 // Sets up a dat.GUI panel to let users control simulation parameters.
 // --------------------------------------------------------------------------------
 function setupGUI() {
+  // Updated initial settings:
   params = {
-    expansionSpeed: 50,
-    particleSize: 2,
-    bloomStrength: 2,
-    bloomRadius: 0.5,
-    bloomThreshold: 0,
+    expansionSpeed: 50,   // (unchanged)
+    particleSize: 1.5,    // changed from 2 to 1.5
+    bloomStrength: 0.2,   // changed from 2 to 0.2
+    bloomRadius: 0.05,    // changed from 0.5 to 0.05
+    bloomThreshold: 0.02, // changed from 0 to 0.02
   };
 
   const gui = new dat.GUI({ width: 300 });
@@ -227,6 +228,8 @@ function setupGUI() {
     .onChange((value) => {
       composer.passes[1].threshold = value;
     });
+
+  gui.close(); // Collapse the control panel upon start.
 }
 
 // --------------------------------------------------------------------------------
