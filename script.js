@@ -21,6 +21,9 @@ function init() {
   // Create a new scene.
   scene = new THREE.Scene();
 
+  // (Optional) You can add fog to the scene here if desired:
+  // scene.fog = new THREE.FogExp2(0x000000, 0.00025);
+
   // Create a perspective camera.
   camera = new THREE.PerspectiveCamera(
     60,
@@ -41,6 +44,8 @@ function init() {
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; // Smooth out camera movement.
   controls.dampingFactor = 0.05;
+  // Initially, do not auto-rotate. We'll enable this after 5 seconds.
+  controls.autoRotate = false;
 
   // Add ambient light to gently light the scene.
   const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
@@ -72,6 +77,12 @@ function init() {
 
   // Set up UI controls with dat.GUI.
   setupGUI();
+
+  // Automatically enable auto-rotation after 5 seconds if the user does not interact.
+  setTimeout(() => {
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.0; // Adjust this value as needed (1.0 rotates slowly to the right)
+  }, 5000);
 
   // Listen for window resize events.
   window.addEventListener("resize", onWindowResize, false);
@@ -231,7 +242,7 @@ function animate() {
     createNebula();
   }
 
-  // Update camera controls.
+  // Update camera controls (this will also handle auto-rotation if enabled).
   controls.update();
 
   // Render the scene using the post-processing composer (which includes bloom).
