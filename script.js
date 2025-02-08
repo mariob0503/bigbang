@@ -79,6 +79,9 @@ function init() {
   bloomPass.radius = 0.5;
   composer.addPass(bloomPass);
 
+  // Ensure the final bloom pass renders to the screen.
+  bloomPass.renderToScreen = true;
+
   // Create the Big Bang particle system.
   createParticleSystem();
 
