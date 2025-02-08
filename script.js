@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------
-// Global variables for scene, camera, renderer, controls, and simulation objects. Version 080220251617 bar appearance!
+// Global variables for scene, camera, renderer, controls, and simulation objects. Version 080220251549 working!
 // --------------------------------------------------------------------------------
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
@@ -16,7 +16,6 @@ const nebulaTargetOpacity = 0.7;
 
 // For the HUD overlay:
 let hudScene, hudCamera, barSprite;
-let barFadeStartTime = 0;
 
 // Global variable for dat.GUI:
 let gui;
@@ -135,8 +134,6 @@ function init() {
       // Center the sprite.
       barSprite.position.set(0, 0, 0);
       hudScene.add(barSprite);
-      // Record the fade start time.
-      barFadeStartTime = clock.elapsedTime;
     });
   }, 3000);
 
@@ -270,16 +267,26 @@ function animate() {
     nebula.material.opacity = Math.min(nebulaTargetOpacity, (fadeElapsed / nebulaFadeDuration) * nebulaTargetOpacity);
   }
 
-  // Animate the bar sprite's fade-in (from 0 to 1 opacity over 3 seconds).
-  if (barSprite && barSprite.material.opacity < 1) {
-    let fadeElapsed = clock.elapsedTime - barFadeStartTime;
-    barSprite.material.opacity = Math.min(1, fadeElapsed / 3);
+  // Update the bar sprite's opacity based on elapsed time:
+  // - From 0 to 3 seconds: no bar (opacity 0)
+  // - From 3 to 6 seconds: fade in from 0 to 1
+  // - From 6 to 9 seconds: fade out from 1 to 0
+  if (barSprite) {
+    if (elapsed < 3) {
+      barSprite.material.opacity = 0;
+    } else if (elapsed >= 3 && elapsed <= 6) {
+      barSprite.material.opacity = (elapsed - 3) / 3;
+    } else if (elapsed > 6 && elapsed <= 9) {
+      barSprite.material.opacity = 1 - ((elapsed - 6) / 3);
+    } else {
+      barSprite.material.opacity = 0;
+    }
   }
 
   controls.update();
   composer.render(delta);
 
-  // Render the HUD overlay (bar.png) on top.
+  // Render the HUD overlay (bar.png) on top of the main scene.
   renderer.clearDepth();
   renderer.render(hudScene, hudCamera);
 }
