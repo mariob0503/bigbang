@@ -1,12 +1,13 @@
 // --------------------------------------------------------------------------------
-// Global variables for scene, camera, renderer, controls, and simulation objects. Version 080220251549 working!
+// Global variables for scene, camera, renderer, controls, and simulation objects.
 // --------------------------------------------------------------------------------
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
 let galaxySystem = null; // Will hold the galaxy cluster (added later)
-let nebula = null; // Will hold the nebula background (cosmic fog)
+let nebula = null;       // Will hold the nebula background (cosmic fog)
+let circlingObjects = []; // Array to hold our circling sprites
 let particleCount = 20000; // Number of particles for the Big Bang explosion
-let params; // Object to store parameters controlled by the UI
+let params;              // Object to store parameters controlled by the UI
 let clock = new THREE.Clock(); // Clock to keep track of elapsed time
 
 // For nebula fade-in:
@@ -251,21 +252,26 @@ function animate() {
   // Update the positions of the explosion particles.
   updateParticles(delta);
 
-  // Gradually add additional elements to the universe:
-  // After 10 seconds, add a galaxy cluster.
+  // Gradually add additional elements to the universe.
   let elapsed = clock.elapsedTime;
   if (elapsed > 10 && !galaxySystem) {
     createGalaxyCluster();
   }
-  // After 8 seconds, create the nebula (cosmic fog) if not already created.
   if (elapsed > 8 && !nebula) {
     createNebula();
   }
-  // If the nebula exists and its opacity is below the target, fade it in smoothly.
+  // Smoothly fade in the nebula (cosmic fog) to the target opacity.
   if (nebula && nebula.material.opacity < nebulaTargetOpacity) {
     let fadeElapsed = clock.elapsedTime - nebulaFadeStartTime;
     nebula.material.opacity = Math.min(nebulaTargetOpacity, (fadeElapsed / nebulaFadeDuration) * nebulaTargetOpacity);
   }
+
+  // Create circling objects at around 8 seconds if they haven't been created yet.
+  if (elapsed > 8 && circlingObjects.length === 0) {
+    createCirclingObjects();
+  }
+  // Update the positions of the circling objects.
+  updateCirclingObjects(delta);
 
   // Update camera controls (handles auto-rotation if enabled).
   controls.update();
@@ -381,4 +387,54 @@ function generateNebulaTexture() {
   // Use linear filtering to smooth the texture.
   texture.minFilter = THREE.LinearFilter;
   return texture;
+}
+
+// --------------------------------------------------------------------------------
+// Function: createCirclingObjects()
+// Loads your custom PNG (bar.png) and creates several sprite objects that will circle
+// around the scene.
+// --------------------------------------------------------------------------------
+function createCirclingObjects() {
+  const loader = new THREE.TextureLoader();
+  // Load the custom texture from the "textures" folder.
+  loader.load('textures/bar.png', function(texture) {
+    const numObjects = 8; // Create 8 circling objects (adjust as desired)
+    for (let i = 0; i < numObjects; i++) {
+      // Create a sprite material with the loaded texture.
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(material);
+      
+      // Assign a random scale (size) to each sprite.
+      let scale = Math.random() * 20 + 10; // between 10 and 30
+      sprite.scale.set(scale, scale, 1);
+
+      // Set an initial random angle.
+      sprite.userData.angle = Math.random() * Math.PI * 2;
+      // Set a random orbit radius (distance from the center).
+      sprite.userData.radius = Math.random() * 100 + 150; // between 150 and 250
+      // Set a random orbit speed (in radians per second).
+      sprite.userData.orbitSpeed = Math.random() * 0.5 + 0.2;
+      // Initialize the sprite's position based on its angle and radius.
+      sprite.position.x = sprite.userData.radius * Math.cos(sprite.userData.angle);
+      sprite.position.y = sprite.userData.radius * Math.sin(sprite.userData.angle);
+      
+      // Add the sprite to the scene and to our circlingObjects array.
+      scene.add(sprite);
+      circlingObjects.push(sprite);
+    }
+  });
+}
+
+// --------------------------------------------------------------------------------
+// Function: updateCirclingObjects()
+// Updates the positions of the circling objects so that they rotate around the center.
+// --------------------------------------------------------------------------------
+function updateCirclingObjects(delta) {
+  circlingObjects.forEach(obj => {
+    // Increment the angle based on the object's orbit speed and delta time.
+    obj.userData.angle += obj.userData.orbitSpeed * delta;
+    // Update the position based on the new angle.
+    obj.position.x = obj.userData.radius * Math.cos(obj.userData.angle);
+    obj.position.y = obj.userData.radius * Math.sin(obj.userData.angle);
+  });
 }
