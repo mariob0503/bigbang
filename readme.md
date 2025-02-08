@@ -1,4 +1,11 @@
-# Big Bang Simulation Demo
+# point logging of a loyalty system
+
+Copyright (c) 2025 by Mario Burmeister and Simplix.Solutions (https://simplix.solutions)
+for the point logging functionality 
+
+
+
+includes # Big Bang Simulation Demo
 
 This is a Three.js demo that simulates the Big Bang expanding into the universe. It includes advanced particle systems, bloom post-processing effects, OrbitControls, and interactive UI controls using dat.GUI.
 
