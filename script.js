@@ -1,12 +1,12 @@
 // --------------------------------------------------------------------------------
-// Global variables for scene, camera, renderer, controls, and simulation objects. works 09022025 1156
+// Global variables for scene, camera, renderer, controls, and simulation objects.
 // --------------------------------------------------------------------------------
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
 let galaxySystem = null; // Will hold the galaxy cluster (added later)
-let nebula = null; // Will hold the nebula background (cosmic fog)
+let nebula = null;       // Will hold the nebula background (cosmic fog)
 let particleCount = 20000; // Number of particles for the Big Bang explosion
-let params; // Object to store parameters controlled by the UI
+let params;              // Object to store parameters controlled by the UI
 let clock = new THREE.Clock(); // Clock to keep track of elapsed time
 
 // For nebula fade-in:
@@ -28,7 +28,7 @@ animate();
 function init() {
   // Create a new scene.
   scene = new THREE.Scene();
-  // (Optional) Add fog if desired; you can uncomment and adjust the density:
+  // (Optional) Add fog if desired:
   // scene.fog = new THREE.FogExp2(0x000000, 0.00025);
 
   // Create a perspective camera.
@@ -40,31 +40,30 @@ function init() {
   );
   camera.position.set(0, 0, 200);
 
-  // Create the WebGL renderer with antialiasing and set its size.
+  // Create the WebGL renderer with antialiasing.
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.shadowMap.enabled = true; // Enable shadow maps for added realism.
+  renderer.shadowMap.enabled = true; // Enable shadow maps for realism.
   document.body.appendChild(renderer.domElement);
 
-  // Add OrbitControls so the user can explore the scene.
+  // Add OrbitControls.
   controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; // Smooth out camera movement.
+  controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-  // Initially, disable auto-rotation.
-  controls.autoRotate = false;
+  controls.autoRotate = false; // Initially disable auto-rotation.
 
-  // Add ambient light to gently light the scene.
+  // Add ambient light.
   const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
   scene.add(ambientLight);
 
-  // Add a point light at the origin to simulate the intense energy of the Big Bang.
+  // Add a point light at the origin.
   const pointLight = new THREE.PointLight(0xffffff, 2, 1000);
   pointLight.position.set(0, 0, 0);
   pointLight.castShadow = true;
   scene.add(pointLight);
 
-  // Set up post-processing using EffectComposer and add a bloom pass to simulate volumetric light.
+  // Set up post-processing using EffectComposer.
   composer = new THREE.EffectComposer(renderer);
   let renderPass = new THREE.RenderPass(scene, camera);
   composer.addPass(renderPass);
@@ -74,28 +73,28 @@ function init() {
     0.4, // radius
     0.85 // threshold
   );
+  // The default values here will later be overridden by the GUI.
   bloomPass.threshold = 0;
   bloomPass.strength = 2;
   bloomPass.radius = 0.5;
   composer.addPass(bloomPass);
 
-  // Create the primary particle system representing the initial Big Bang explosion.
+  // Create the primary particle system.
   createParticleSystem();
 
   // Set up UI controls with dat.GUI.
   setupGUI();
 
-  // Automatically enable auto-rotation after 3 seconds with a smooth ramp-up.
+  // Automatically enable auto-rotation after 3 seconds.
   setTimeout(() => {
     controls.autoRotate = true;
-    const rampDuration = 3; // Ramp duration in seconds
-    const targetSpeed = 1.0; // Final autoRotateSpeed value
+    const rampDuration = 3; // seconds
+    const targetSpeed = 1.0; // final autoRotateSpeed value
     const startTime = clock.elapsedTime;
     function rampAutoRotate() {
       let elapsed = clock.elapsedTime - startTime;
       let t = elapsed / rampDuration;
       if (t > 1) t = 1;
-      // Gradually increase the autoRotateSpeed from 0 to targetSpeed.
       controls.autoRotateSpeed = targetSpeed * t;
       if (t < 1) {
         requestAnimationFrame(rampAutoRotate);
@@ -104,19 +103,25 @@ function init() {
     rampAutoRotate();
   }, 3000);
 
-  // --- Add the bar overlay (without fade-out) ---
+  // --- Add the bar overlay ---
   barImage = document.createElement("img");
   barImage.src = "textures/bar.png";
-  // Position the image absolutely on top of the canvas.
+  // Set initial opacity to 0.
+  barImage.style.opacity = "0"; // <-- Changed: start fully transparent.
   barImage.style.position = "absolute";
-  // Position it so that it appears centered vertically (with a height of 50%).
-  barImage.style.top = "25%"; // 25% from the top => centered vertically if height is 50%
-  barImage.style.left = "50%"; // Center horizontally.
+  barImage.style.top = "25%";    // Centered vertically if height is 50%
+  barImage.style.left = "50%";   // Center horizontally.
   barImage.style.transform = "translate(-50%, 0)";
-  barImage.style.height = "50vh"; // 50% of the viewport height.
-  barImage.style.width = "auto"; // Maintain aspect ratio.
-  barImage.style.opacity = "1"; // Always fully opaque (no fade-out).
+  barImage.style.height = "50vh"; // 50% of viewport height.
+  barImage.style.width = "auto";  // Maintain aspect ratio.
+  // Optional: add a CSS transition for smooth opacity change.
+  barImage.style.transition = "opacity 4s ease"; // <-- Changed: animate opacity over 4 seconds.
   document.body.appendChild(barImage);
+
+  // Trigger the bar fade-in 3 seconds after page load.
+  setTimeout(() => {
+    barImage.style.opacity = "1";
+  }, 3000);
 
   // Listen for window resize events.
   window.addEventListener("resize", onWindowResize, false);
@@ -124,25 +129,17 @@ function init() {
 
 // --------------------------------------------------------------------------------
 // Function: createParticleSystem()
-// Creates a particle system where all particles originate at the singularity and
-// are assigned random velocities that will cause them to expand outward.
+// Creates a particle system where all particles start at the singularity.
 // --------------------------------------------------------------------------------
 function createParticleSystem() {
-  // Create a BufferGeometry to store particle positions.
   const geometry = new THREE.BufferGeometry();
-
-  // Allocate arrays for particle positions and velocities.
   particlePositions = new Float32Array(particleCount * 3);
   particleVelocities = new Float32Array(particleCount * 3);
 
-  // Initialize each particle at (0,0,0) with a random outward velocity.
   for (let i = 0; i < particleCount; i++) {
-    // All particles start at the singularity.
     particlePositions[i * 3] = 0;
     particlePositions[i * 3 + 1] = 0;
     particlePositions[i * 3 + 2] = 0;
-
-    // Randomly determine the particle's direction (spherical coordinates).
     let theta = Math.random() * 2 * Math.PI;
     let phi = Math.acos(Math.random() * 2 - 1);
     let speed = Math.random() * 0.5 + 0.5; // Speed between 0.5 and 1.0.
@@ -150,14 +147,9 @@ function createParticleSystem() {
     particleVelocities[i * 3 + 1] = speed * Math.sin(phi) * Math.sin(theta);
     particleVelocities[i * 3 + 2] = speed * Math.cos(phi);
   }
+  geometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
 
-  // Attach the positions to the geometry.
-  geometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(particlePositions, 3)
-  );
-
-  // Create a PointsMaterial using a custom sprite texture for a soft glow.
+  // Create a PointsMaterial with a custom sprite texture.
   const sprite = generateSprite();
   const material = new THREE.PointsMaterial({
     size: 2,
@@ -169,7 +161,6 @@ function createParticleSystem() {
     color: 0xffffff,
   });
 
-  // Create the particle system and add it to the scene.
   particleSystem = new THREE.Points(geometry, material);
   scene.add(particleSystem);
 }
@@ -184,7 +175,6 @@ function generateSprite() {
   canvas.height = 64;
   const context = canvas.getContext("2d");
 
-  // Create a radial gradient for the glow.
   const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
   gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
   gradient.addColorStop(0.2, "rgba(255, 200, 200, 0.8)");
@@ -193,9 +183,7 @@ function generateSprite() {
   context.fillStyle = gradient;
   context.fillRect(0, 0, 64, 64);
 
-  // Create and return a texture from the canvas.
   const texture = new THREE.CanvasTexture(canvas);
-  // Use linear filtering to smooth out the texture.
   texture.minFilter = THREE.LinearFilter;
   return texture;
 }
@@ -205,17 +193,15 @@ function generateSprite() {
 // Sets up a dat.GUI panel to let users control simulation parameters.
 // --------------------------------------------------------------------------------
 function setupGUI() {
-  // Define default parameters.
   // <-- CHANGED DEFAULT VALUES BELOW:
   params = {
-    expansionSpeed: 50,  // Expansion Speed: 50
-    particleSize: 1.5,   // Particle Size: 1.5 (changed from 2)
-    bloomStrength: 0.2,  // Bloom Strength: 0.2 (changed from 2)
-    bloomRadius: 0.05,   // Bloom Radius: 0.05 (changed from 0.5)
-    bloomThreshold: 0.02 // Bloom Threshold: 0.02 (changed from 0)
+    expansionSpeed: 50,   // Expansion Speed: 50
+    particleSize: 1.5,    // Particle Size: 1.5
+    bloomStrength: 0.2,   // Bloom Strength: 0.2
+    bloomRadius: 0.05,    // Bloom Radius: 0.05
+    bloomThreshold: 0.02  // Bloom Threshold: 0.02
   };
 
-  // Create a GUI panel.
   const gui = new dat.GUI({ width: 300 });
   gui.add(params, "expansionSpeed", 10, 200).name("Expansion Speed");
   gui
@@ -243,13 +229,13 @@ function setupGUI() {
       composer.passes[1].threshold = value;
     });
   
-  // Collapse (close) the control panel on startup.
-  gui.close(); // <-- THIS line collapses the GUI initially.
+  // Collapse the control panel on startup.
+  gui.close(); // <-- This collapses the GUI initially.
 }
 
 // --------------------------------------------------------------------------------
 // Function: onWindowResize()
-// Adjusts the camera aspect ratio and renderer size when the browser window resizes.
+// Adjusts the camera aspect ratio and renderer size on window resize.
 // --------------------------------------------------------------------------------
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -260,29 +246,20 @@ function onWindowResize() {
 
 // --------------------------------------------------------------------------------
 // Function: animate()
-// The main animation loop: updates particle positions, adds additional cosmic
-// elements as time progresses, and renders the scene.
+// The main animation loop: updates particle positions, adds additional elements, and renders.
 // --------------------------------------------------------------------------------
 function animate() {
   requestAnimationFrame(animate);
-
-  // Compute the time elapsed since the last frame.
   const delta = clock.getDelta();
-
-  // Update the positions of the explosion particles.
   updateParticles(delta);
 
-  // Gradually add additional elements to the universe:
-  // After 10 seconds, add a galaxy cluster.
   let elapsed = clock.elapsedTime;
   if (elapsed > 10 && !galaxySystem) {
     createGalaxyCluster();
   }
-  // After 8 seconds, create the nebula (cosmic fog) if not already created.
   if (elapsed > 8 && !nebula) {
     createNebula();
   }
-  // If the nebula exists and its opacity is below the target, fade it in smoothly.
   if (nebula && nebula.material.opacity < nebulaTargetOpacity) {
     let fadeElapsed = clock.elapsedTime - nebulaFadeStartTime;
     nebula.material.opacity = Math.min(
@@ -291,17 +268,13 @@ function animate() {
     );
   }
 
-  // Update camera controls (handles auto-rotation if enabled).
   controls.update();
-
-  // Render the scene using the post-processing composer (which includes bloom).
   composer.render(delta);
 }
 
 // --------------------------------------------------------------------------------
 // Function: updateParticles()
-// Moves each particle outward from the center by updating its position based on
-// its velocity and the user-controlled expansion speed.
+// Moves each particle outward based on its velocity and expansion speed.
 // --------------------------------------------------------------------------------
 function updateParticles(delta) {
   const positions = particleSystem.geometry.attributes.position.array;
@@ -316,15 +289,13 @@ function updateParticles(delta) {
 
 // --------------------------------------------------------------------------------
 // Function: createGalaxyCluster()
-// Creates a secondary particle system to simulate the appearance of galaxies and
-// star clusters in the later universe.
+// Creates a secondary particle system for galaxy clusters.
 // --------------------------------------------------------------------------------
 function createGalaxyCluster() {
-  const galaxyCount = 5000; // Number of galaxy particles
+  const galaxyCount = 5000;
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(galaxyCount * 3);
 
-  // Randomly distribute galaxy particles in a large spherical region.
   for (let i = 0; i < galaxyCount; i++) {
     positions[i * 3] = (Math.random() - 0.5) * 1000;
     positions[i * 3 + 1] = (Math.random() - 0.5) * 1000;
@@ -332,7 +303,6 @@ function createGalaxyCluster() {
   }
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
-  // Create a PointsMaterial for the galaxy cluster with smaller, fainter points.
   const material = new THREE.PointsMaterial({
     size: 1.5,
     color: 0xaaaaaa,
@@ -342,36 +312,31 @@ function createGalaxyCluster() {
     depthTest: false,
   });
 
-  // Create the galaxy particle system and add it to the scene.
   galaxySystem = new THREE.Points(geometry, material);
   scene.add(galaxySystem);
 }
 
 // --------------------------------------------------------------------------------
 // Function: createNebula()
-// Creates a large, semi-transparent sphere with a custom-generated texture to
-// simulate a nebula (cosmic fog) that forms as the universe expands.
+// Creates a large, semi-transparent sphere to simulate a nebula.
 // --------------------------------------------------------------------------------
 function createNebula() {
   const nebulaGeometry = new THREE.SphereGeometry(500, 32, 32);
-  // Create the nebula texture and smooth it.
   const texture = generateNebulaTexture();
   const nebulaMaterial = new THREE.MeshBasicMaterial({
     map: texture,
     side: THREE.BackSide,
     transparent: true,
-    opacity: 0.0, // Start fully transparent and fade in.
+    opacity: 0.0,
   });
   nebula = new THREE.Mesh(nebulaGeometry, nebulaMaterial);
   scene.add(nebula);
-  // Record the time at which the nebula starts fading in.
   nebulaFadeStartTime = clock.elapsedTime;
 }
 
 // --------------------------------------------------------------------------------
 // Function: generateNebulaTexture()
-// Uses canvas drawing to create a nebula-like texture with a radial gradient and
-// random noise to simulate stars and gaseous clouds.
+// Uses canvas drawing to create a nebula-like texture with gradient and noise.
 // --------------------------------------------------------------------------------
 function generateNebulaTexture() {
   const size = 512;
@@ -380,7 +345,6 @@ function generateNebulaTexture() {
   canvas.height = size;
   const context = canvas.getContext("2d");
 
-  // Create a radial gradient as the base of the nebula.
   const gradient = context.createRadialGradient(
     size / 2,
     size / 2,
@@ -394,7 +358,6 @@ function generateNebulaTexture() {
   context.fillStyle = gradient;
   context.fillRect(0, 0, size, size);
 
-  // Add random noise dots to simulate stars and gas.
   for (let i = 0; i < 1000; i++) {
     context.fillStyle = "rgba(255,255,255," + Math.random() * 0.1 + ")";
     const x = Math.random() * size;
@@ -402,7 +365,6 @@ function generateNebulaTexture() {
     context.fillRect(x, y, 1, 1);
   }
   const texture = new THREE.CanvasTexture(canvas);
-  // Use linear filtering to smooth the texture.
   texture.minFilter = THREE.LinearFilter;
   return texture;
 }
