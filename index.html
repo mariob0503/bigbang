@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <!-- Ensures proper scaling on mobile devices q-->
+    <!-- Ensures proper scaling on mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three.js Scene with Bar Overlay (No Fade Out)</title>
     <style>
@@ -14,17 +14,21 @@
         display: block;
       }
     </style>
-    <!--
-      The scripts below are loaded in the proper order.
-      Note: We include the missing dependencies CopyShader.js and ShaderPass.js.
-    -->
+    <!-- Load Three.js and required dependencies in the proper order -->
     <script src="https://unpkg.com/three@0.125.0/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://unpkg.com/dat.gui@0.7.7/build/dat.gui.min.js"></script>
+    
+    <!-- Postprocessing dependencies -->
     <script src="https://unpkg.com/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
+    
+    <!-- The missing dependency: LuminosityHighPassShader -->
+    <script src="https://unpkg.com/three@0.125.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    
+    <!-- Now load UnrealBloomPass -->
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
   </head>
   <body>
