@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -19,6 +18,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    
+    <!-- Include missing dependencies for EffectComposer -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
+    
+    <!-- Now include the postprocessing scripts -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
