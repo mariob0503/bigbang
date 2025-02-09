@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------
-// Global variables for scene, camera, renderer, controls, and simulation objects ///working 09022025 1136.
+// Global variables for scene, camera, renderer, controls, and simulation objects.
 // --------------------------------------------------------------------------------
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
@@ -206,12 +206,13 @@ function generateSprite() {
 // --------------------------------------------------------------------------------
 function setupGUI() {
   // Define default parameters.
+  // <-- CHANGED DEFAULT VALUES BELOW:
   params = {
-    expansionSpeed: 50, // Scales how fast the particles expand.
-    particleSize: 2,    // Particle point size.
-    bloomStrength: 2,   // Bloom effect strength.
-    bloomRadius: 0.5,   // Bloom effect radius.
-    bloomThreshold: 0,  // Bloom effect threshold.
+    expansionSpeed: 50,  // Expansion Speed: 50
+    particleSize: 1.5,   // Particle Size: 1.5 (changed from 2)
+    bloomStrength: 0.2,  // Bloom Strength: 0.2 (changed from 2)
+    bloomRadius: 0.05,   // Bloom Radius: 0.05 (changed from 0.5)
+    bloomThreshold: 0.02 // Bloom Threshold: 0.02 (changed from 0)
   };
 
   // Create a GUI panel.
@@ -241,6 +242,9 @@ function setupGUI() {
     .onChange((value) => {
       composer.passes[1].threshold = value;
     });
+  
+  // Collapse (close) the control panel on startup.
+  gui.close(); // <-- THIS line collapses the GUI initially.
 }
 
 // --------------------------------------------------------------------------------
