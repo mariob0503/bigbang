@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------
-// Global variables for scene, camera, renderer, controls, and simulation objects..
+// Global variables for scene, camera, renderer, controls, and simulation objects.
 // --------------------------------------------------------------------------------
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
@@ -73,8 +73,8 @@ function init() {
     0.4, // radius
     0.85 // threshold
   );
-  // The default values here will later be overridden by the GUI.
-  bloomPass.threshold = 0;
+  // UPDATED: Set the initial threshold to 0.095 to match the desired default.
+  bloomPass.threshold = 0.095;
   bloomPass.strength = 2;
   bloomPass.radius = 0.5;
   composer.addPass(bloomPass);
@@ -107,15 +107,15 @@ function init() {
   barImage = document.createElement("img");
   barImage.src = "textures/bar.png";
   // Set initial opacity to 0.
-  barImage.style.opacity = "0"; // <-- Changed: start fully transparent.
+  barImage.style.opacity = "0";
   barImage.style.position = "absolute";
   barImage.style.top = "25%";    // Centered vertically if height is 50%
   barImage.style.left = "50%";   // Center horizontally.
   barImage.style.transform = "translate(-50%, 0)";
   barImage.style.height = "50vh"; // 50% of viewport height.
   barImage.style.width = "auto";  // Maintain aspect ratio.
-  // Optional: add a CSS transition for smooth opacity change.
-  barImage.style.transition = "opacity 4s ease"; // <-- Changed: animate opacity over 4 seconds.
+  // Add a CSS transition to smoothly animate opacity over 4 seconds.
+  barImage.style.transition = "opacity 4s ease";
   document.body.appendChild(barImage);
 
   // Trigger the bar fade-in 3 seconds after page load.
@@ -199,7 +199,7 @@ function setupGUI() {
     particleSize: 1.5,    // Particle Size: 1.5
     bloomStrength: 0.2,   // Bloom Strength: 0.2
     bloomRadius: 0.05,    // Bloom Radius: 0.05
-    bloomThreshold: 0.02  // Bloom Threshold: 0.02
+    bloomThreshold: 0.095 // UPDATED: Bloom Threshold: 0.095
   };
 
   const gui = new dat.GUI({ width: 300 });
@@ -230,7 +230,7 @@ function setupGUI() {
     });
   
   // Collapse the control panel on startup.
-  gui.close(); // <-- This collapses the GUI initially.
+  gui.close();
 }
 
 // --------------------------------------------------------------------------------
