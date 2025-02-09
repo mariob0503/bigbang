@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------
-// Global variables for scene, camera, renderer, controls, and simulation objects.
+// Global variables for scene, camera, renderer, controls, and simulation objects..
 // --------------------------------------------------------------------------------
 let scene, camera, renderer, controls, composer;
 let particleSystem, particlePositions, particleVelocities;
