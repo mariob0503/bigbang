@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <!-- Ensures proper scaling on mobile devices -->
+    <!-- Ensures proper scaling on mobile devices works 09022025 1156-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Three.js Scene with Bar Overlay (No Fade Out)</title>
     <style>
@@ -21,7 +21,7 @@
     
     <!-- Postprocessing dependencies -->
     <script src="https://unpkg.com/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
-    <!-- Added Pass.js to define THREE.Pass (this fixes the ShaderPass error) -->
+    <!-- IMPORTANT: Load Pass.js BEFORE ShaderPass.js so THREE.Pass is defined -->
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/Pass.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
