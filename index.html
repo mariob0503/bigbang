@@ -15,12 +15,14 @@
       }
     </style>
     <!--
-      Updated Script Sources:
-      The scripts below are loaded from unpkg.com in the correct order.
+      The scripts below are loaded in the proper order.
+      Note: We include the missing dependencies CopyShader.js and ShaderPass.js.
     -->
     <script src="https://unpkg.com/three@0.125.0/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://unpkg.com/dat.gui@0.7.7/build/dat.gui.min.js"></script>
+    <script src="https://unpkg.com/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
     <script src="https://unpkg.com/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
