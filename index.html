@@ -1,40 +1,223 @@
+
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <!-- Ensures proper scaling on mobile devices -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Three.js Scene with Bar Overlay (No Fade Out)</title>
-    <style>
-      body {
-        margin: 0;
-        overflow: hidden;
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lift & Earn – Gamification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Global styling */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: #121212;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      color: #ffffff;
+    }
+    /* Background canvas for animated particles */
+    #bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    /* Lift & Earn Header with pulsating glow */
+    #flag {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      text-align: center;
+      padding: 20px 0;
+      z-index: 10;
+    }
+    #flag .big-bold {
+      font-size: 4rem; /* Increased size */
+      font-weight: bold;
+      animation: brightPulse 2s infinite;
+    }
+    @keyframes brightPulse {
+      0% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+      50% { text-shadow: 0 0 40px rgba(255,255,255,1); }
+      100% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+    }
+    #flag .subtitle {
+      font-size: 2rem; /* Increased size */
+      margin-top: 5px;
+    }
+    /* The new subline: Simplix in blue, Gym Rewards in white */
+    #flag .subtitle span.blue {
+      color: #0091EA;
+    }
+    /* Center container for messages */
+    #centerDisplay {
+      position: absolute;
+      top: 60%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 20;
+      width: 90%;
+      font-size: 1.3rem;
+      padding: 20px;
+    }
+    /* Sensor readings – hidden by default */
+    #sensorReadings {
+      display: none;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    /* Buttons container */
+    .buttons {
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      z-index: 30;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1.1rem;
+      background-color: #0091EA;
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    /* Tap overlay (for Chrome users) */
+    #tapOverlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      text-align: center;
+      padding-top: 40vh;
+      color: #ffffff;
+      font-size: 1.8rem;
+    }
+    #tapOverlay #tapMessage {
+      display: inline-block;
+      padding: 20px 40px;
+      border: 2px solid #0091EA;
+      border-radius: 10px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    /* CSS animations for rotating images */
+    @keyframes rotateFadeOut {
+      0% { transform: rotate(0deg); opacity: 1; }
+      100% { transform: rotate(360deg); opacity: 0; }
+    }
+    @keyframes fadeInRotateInfinite {
+      0% { transform: rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: rotate(360deg); opacity: 1; }
+    }
+  </style>
+  <!-- Three.js and required libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.7/build/dat.gui.min.js"></script>
+  <!-- Postprocessing dependencies (order is important) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/Pass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <!-- Our custom modules -->
+  <script src="js/simulation.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body>
+  <!-- Background canvas for animated particles -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- Lift & Earn UI -->
+  <div id="flag">
+    <div class="big-bold">Lift & Earn</div>
+    <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
+  </div>
+  <div id="centerDisplay" class="initial">
+    Choose your action to log your points.
+  </div>
+  <div id="sensorReadings"></div>
+  <div class="buttons">
+    <button id="shakeButton">Shake</button>
+    <button id="tiltButton">Tilt</button>
+    <button id="logPointsButton">Log Points</button>
+  </div>
+  <div id="tapOverlay">
+    <div id="tapMessage">Tap anywhere to continue</div>
+  </div>
+  
+  <script>
+    // Background Particle Animation on the start page
+    (function(){
+      var canvas = document.getElementById("bgCanvas");
+      var ctx = canvas.getContext("2d");
+      var particles = [];
+      var numParticles = 100;
+      
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
       }
-      canvas {
-        display: block;
+      window.addEventListener("resize", resize);
+      resize();
+      
+      // Particle constructor
+      function Particle() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.alpha = Math.random();
       }
-    </style>
-    <!-- Load Three.js and required dependencies in the proper order -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.7/build/dat.gui.min.js"></script>
-    
-    <!-- Postprocessing dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
-    <!-- IMPORTANT: Load Pass.js BEFORE ShaderPass.js so THREE.Pass is defined -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/Pass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
-    
-    <!-- Dependency for UnrealBloomPass -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    
-    <!-- UnrealBloomPass -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  </head>
-  <body>
-    <!-- The main code is in script.js -->
-    <script src="script.js"></script>
-  </body>
+      
+      for (var i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+      }
+      
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.y > canvas.height) p.y = 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+          ctx.fillStyle = "rgba(173,216,230," + p.alpha + ")";
+          ctx.fill();
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+  </script>
+</body>
 </html>
