@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
     totalPoints += pts;
   }
 
-  // Hide the Lift & Earn UI elements so that the simulation can be displayed
+  // Hide the Lift & Earn UI elements so that the simulation can be displayed.
   function hideLiftEarnUI() {
     var flag = document.getElementById("flag");
     var center = document.getElementById("centerDisplay");
